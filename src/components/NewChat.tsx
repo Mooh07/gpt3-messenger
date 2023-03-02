@@ -16,7 +16,6 @@ function NewChat() {
         createdAt: serverTimestamp(),
       }
     );
-    console.log(doc);
     router.push(`/chat/${doc.id}`);
   };
   return (
