@@ -6,11 +6,14 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import EmptyChat from "./EmptyChat";
 import LoadingSpinner from "./LoadingSpinner";
 import Message from "./Message";
+import React, { useEffect, useRef, useState } from "react";
 
 type Props = {
   chatId: string;
 };
 function Chat({ chatId }: Props) {
+  const [scrollToRef, setScrollToRef] = useState<Element | null>(null);
+
   const { data: session } = useSession();
   const [messages, loading] = useCollection(
     session &&
@@ -26,6 +29,11 @@ function Chat({ chatId }: Props) {
         orderBy("createdAt", "asc")
       )
   );
+
+  useEffect(() => {
+    scrollToRef?.scrollIntoView({ behavior: "smooth" });
+    console.log(messages)
+  }, [scrollToRef, messages]);
   if (loading)
     return (
       <section className="flex-1">
@@ -35,9 +43,15 @@ function Chat({ chatId }: Props) {
   return (
     <section className="flex-1 overflow-y-auto">
       {!messages?.empty ? (
-        messages?.docs.map((message) => (
-          <Message key={message.id} message={message.data()} />
-        ))
+        <ul>
+          {messages?.docs.map((message) => (
+            <Message key={message.id} message={message.data()} />
+          ))}
+          <div
+            style={{ float: "left", clear: "both" }}
+            ref={setScrollToRef}
+          ></div>
+        </ul>
       ) : (
         <EmptyChat />
       )}
