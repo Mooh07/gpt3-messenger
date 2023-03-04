@@ -14,9 +14,10 @@ import toast, { Toaster } from "react-hot-toast";
 
 type Props = {
   chatId: string;
+  setMessages: React.Dispatch<any>;
 };
 
-function ChatInput({ chatId }: Props) {
+function ChatInput({ chatId, setMessages }: Props) {
   const [prompt, setPrompt] = useState("");
   const { data: session } = useSession();
   const model = "text-davinci-003";
@@ -38,10 +39,19 @@ function ChatInput({ chatId }: Props) {
       },
     };
     const notification = toast.loading("chatGPT is thinking...");
-    await addDoc(
-      collection(db, "users", session?.user?.email!, "chats", chatId, "messages"),
+    const doc = await addDoc(
+      collection(
+        db,
+        "users",
+        session?.user?.email!,
+        "chats",
+        chatId,
+        "messages"
+      ),
       message
     );
+    message.id = doc.id;
+    setMessages((prevState: Message[]) => [message, ...prevState]);
     await fetch("/api/askQuestions", {
       method: "post",
       headers: {
@@ -53,7 +63,12 @@ function ChatInput({ chatId }: Props) {
         model,
         session,
       }),
-    }).then((data) => {
+    }).then(async (data) => {
+      const response = (await data.json()) as Message;
+      setMessages((prevState: Message[]): Message[] => [
+        { ...response },
+        ...prevState,
+      ]);
       toast.success("chatGPT has responded", {
         id: notification,
       });

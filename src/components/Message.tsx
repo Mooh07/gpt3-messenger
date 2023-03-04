@@ -1,7 +1,7 @@
 import { DocumentData } from "firebase/firestore";
 
 type Props = {
-  message: DocumentData;
+  message: Message;
 };
 function Message({ message }: Props) {
   const messageFromChatGpt = message.user.name === "chatGPT";
@@ -9,7 +9,7 @@ function Message({ message }: Props) {
     <section
       className={`py-5 text-white ${messageFromChatGpt && "bg-[#434654]"}`}
     >
-      <div className="max-w-2xl mx-auto flex space-x-5 px-10">
+      <div className="mx-auto flex max-w-2xl space-x-5 px-10">
         <img src={message.user.avatar} alt="" className="h-8 w-8" />
         <p className="pt-1 text-sm">{message.text}</p>
       </div>

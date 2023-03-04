@@ -32,14 +32,14 @@ export async function POST(req: Request) {
     },
   };
 
-  await adminDB
+  const doc = await adminDB
     .collection("users")
     .doc(session?.user?.email)
     .collection("chats")
     .doc(chatId)
     .collection("messages")
     .add(message);
-  return new Response(JSON.stringify({ answer: message.text }), {
+  return new Response(JSON.stringify({ id: doc.id, ...message }), {
     status: 200,
   });
 }

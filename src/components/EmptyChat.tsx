@@ -18,15 +18,17 @@ function EmptyChat() {
           </section>
           <ul className="space-y-2">
             <li>
-              <p className="infoText">"Explain something to me"</p>
+              <p className="infoText">&quot;Explain something to me&quot;</p>
             </li>
             <li>
               <p className="infoText">
-                "What is the difference between a dog and a cat"
+                &quot;What is the difference between a dog and a cat&quot;
               </p>
             </li>
             <li>
-              <p className="infoText">"What is the color of the sun?"</p>
+              <p className="infoText">
+                &quot;What is the color of the sun?&quot;
+              </p>
             </li>
           </ul>
         </section>

@@ -7,7 +7,7 @@ function ChatPage({ params: { chatId } }: Props) {
   return (
     <section className="flex h-screen flex-col overflow-hidden">
       <Chat chatId={chatId} />
-      <ChatInput chatId={chatId} />
+      
     </section>
   );
 }
