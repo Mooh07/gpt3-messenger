@@ -9,12 +9,12 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { useSession } from "next-auth/react";
-import { FormEvent, useState } from "react";
+import { Dispatch, FormEvent, SetStateAction, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 type Props = {
   chatId: string;
-  setMessages: React.Dispatch<any>;
+  setMessages: Dispatch<SetStateAction<Message[]>>;
 };
 
 function ChatInput({ chatId, setMessages }: Props) {
@@ -51,7 +51,7 @@ function ChatInput({ chatId, setMessages }: Props) {
       message
     );
     message.id = doc.id;
-    setMessages((prevState: Message[]) => [message, ...prevState]);
+    setMessages((prevState): Message[] => [message, ...prevState]);
     await fetch("/api/askQuestions", {
       method: "post",
       headers: {
@@ -65,10 +65,7 @@ function ChatInput({ chatId, setMessages }: Props) {
       }),
     }).then(async (data) => {
       const response = (await data.json()) as Message;
-      setMessages((prevState: Message[]): Message[] => [
-        { ...response },
-        ...prevState,
-      ]);
+      setMessages((prevState): Message[] => [{ ...response }, ...prevState]);
       toast.success("chatGPT has responded", {
         id: notification,
       });
