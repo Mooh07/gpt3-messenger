@@ -51,7 +51,7 @@ function ChatInput({ chatId, setMessages }: Props) {
       message
     );
     message.id = doc.id;
-    setMessages((prevState): Message[] => [message, ...prevState]);
+    setMessages((prevState) => [message, ...prevState]);
     await fetch("/api/askQuestions", {
       method: "post",
       headers: {
@@ -65,7 +65,7 @@ function ChatInput({ chatId, setMessages }: Props) {
       }),
     }).then(async (data) => {
       const response = (await data.json()) as Message;
-      setMessages((prevState): Message[] => [{ ...response }, ...prevState]);
+      setMessages((prevState) => [{ ...response }, ...prevState]);
       toast.success("chatGPT has responded", {
         id: notification,
       });

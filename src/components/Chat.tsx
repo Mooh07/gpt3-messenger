@@ -25,23 +25,37 @@ type Props = {
 };
 
 function Chat({ chatId }: Props) {
-  const [scrollBottomRef, setScrollBottomRef] = useState<Element | null>(null);
-  const [topOfCurrentChatRef, setTopOfCurrentChatRef] =
+  const [refBottomChatContainer, setScrollBottomRef] = useState<Element | null>(
+    null
+  );
+  const [refTopChatContainer, setTopOfCurrentChatRef] =
     useState<Element | null>(null);
-  const [scrollContainer, setScrollContainer] = useState<Element | null>(null);
-  const [totalChatMessages, setTotalChatMessages] = useState<number>(0);
-  const [messages, setMessages] = useState<Message[]>([]);
+
+  const [refScrollContainer, setScrollContainer] = useState<Element | null>(
+    null
+  );
+  const [refFirstMessageInOurList, setFirstMessageInOurList] =
+    useState<DocumentData | null>(null);
+
   const [loading, setIsLoading] = useState<boolean>(true);
   const [nextPageLoading, setNextPageLoading] = useState<boolean>(false);
+
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [totalChatMessages, setTotalChatMessages] = useState<number>(0);
+
+  // scroll container: height before pulling next page, and position of scroll right when we start pulling
   const [previousScrollHeight, setPreviousScrollHeight] = useState<number>(0);
   const [previousScrollPosition, setPreviousScrollPosition] =
     useState<number>(0);
-  const [lastItem, setLastItem] = useState<DocumentData | null>(null);
+
   const { data: session } = useSession();
 
   useEffect(() => {
-    scrollBottomRef?.scrollIntoView();
-  }, [scrollBottomRef]);
+    const scrollToBottomOfChatContainerOnMount = () => {
+      refBottomChatContainer?.scrollIntoView();
+    };
+    scrollToBottomOfChatContainerOnMount();
+  }, [refBottomChatContainer]);
   useEffect(() => {
     const initialFetch = async () => {
       setIsLoading(true);
@@ -58,19 +72,18 @@ function Chat({ chatId }: Props) {
         query(coll, limit(9), orderBy("createdAt", "desc"))
       );
       setTotalChatMessages(snapshot.data().count);
-      setMessages(getMessagesFromDoc(data.docs));
-      setLastItem(data.docs[data.docs.length - 1]);
+      setMessages(getMessagesFromDocs(data.docs));
+      setFirstMessageInOurList(data.docs[data.docs.length - 1]);
       setIsLoading(false);
     };
     initialFetch();
   }, []);
 
   useEffect(() => {
-    if (!topOfCurrentChatRef) return;
+    if (!refTopChatContainer) return;
     const fetchNextPage = async () => {
-      if (messages.length >= totalChatMessages) return;
-      setPreviousScrollHeight(scrollContainer?.scrollHeight!);
-      setPreviousScrollPosition(scrollContainer?.scrollTop!);
+      setPreviousScrollHeight(refScrollContainer?.scrollHeight!);
+      setPreviousScrollPosition(refScrollContainer?.scrollTop!);
       if (nextPageLoading) return;
       setNextPageLoading(true);
 
@@ -82,36 +95,41 @@ function Chat({ chatId }: Props) {
         chatId,
         "messages"
       );
+
       const data = await getDocs(
         query(
           coll,
           limit(9),
           orderBy("createdAt", "desc"),
-          startAfter(lastItem)
+          startAfter(refFirstMessageInOurList)
         )
       );
-      setMessages([...messages, ...getMessagesFromDoc(data.docs)]);
-      setLastItem(data.docs[data.docs.length - 1]);
+      setMessages([...messages, ...getMessagesFromDocs(data.docs)]);
+      const lastMessageWePulled = data.docs[data.docs.length - 1];
+      setFirstMessageInOurList(lastMessageWePulled);
       setNextPageLoading(false);
     };
-
+    // watch scrolling to top of chat container to pull next page
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
+      const pulledAllMessages = messages.length >= totalChatMessages;
+      if (!pulledAllMessages && entry.isIntersecting) {
         fetchNextPage();
       }
     });
 
-    observer.observe(topOfCurrentChatRef);
-    return () => observer.unobserve(topOfCurrentChatRef);
-  }, [topOfCurrentChatRef]);
+    observer.observe(refTopChatContainer);
+    return () => observer.unobserve(refTopChatContainer);
+  }, [refTopChatContainer]);
   useEffect(() => {
-    if (!scrollContainer) return;
-    scrollContainer.scrollTo({
+    if (!refScrollContainer) return;
+    const previousScrollPositionBeforeFetchingNextPage =
+      refScrollContainer.scrollHeight -
+      previousScrollHeight +
+      previousScrollPosition;
+
+    refScrollContainer.scrollTo({
       left: 0,
-      top:
-        scrollContainer.scrollHeight -
-        previousScrollHeight +
-        previousScrollPosition,
+      top: previousScrollPositionBeforeFetchingNextPage,
     });
   }, [messages]);
 
@@ -122,7 +140,6 @@ function Chat({ chatId }: Props) {
       </section>
     );
   const reversedMessages = [...messages].reverse();
-  console.log(messages);
   return (
     <>
       <section
@@ -162,7 +179,7 @@ function Chat({ chatId }: Props) {
 
 export default Chat;
 
-const getMessagesFromDoc = (
+const getMessagesFromDocs = (
   docs: QueryDocumentSnapshot<DocumentData>[]
 ): Message[] => {
   let data: Message[] = [];
