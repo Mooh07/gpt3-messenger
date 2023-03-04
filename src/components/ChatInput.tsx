@@ -91,7 +91,6 @@ function ChatInput({ chatId, setMessages }: Props) {
           <PaperAirplaneIcon className="h-4 w-4 -rotate-45" />
         </button>
       </form>
-      <section>{/* modal  */}</section>
     </section>
   );
 }
